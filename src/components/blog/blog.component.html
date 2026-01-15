@@ -1,0 +1,421 @@
+<div class="h-full flex flex-col bg-[#0B0C10]">
+  
+  <!-- Topbar -->
+  <div class="h-16 bg-[#161821] border-b border-white/5 px-6 flex items-center justify-between shrink-0 z-10 shadow-sm">
+    <div>
+      <h1 class="font-bold text-gray-200 text-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-gray-500 cursor-pointer hover:text-white" *ngIf="isEditing()" (click)="cancelEdit()">arrow_back</span>
+        {{ store.dict().blg_posts }}
+      </h1>
+    </div>
+    
+    @if (!isEditing()) {
+      <button (click)="createNewPost()" class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-500 transition shadow-[0_0_15px_rgba(147,51,234,0.3)]">
+         <span class="material-symbols-outlined text-[18px]">add_circle</span>
+         {{ store.dict().blg_add }}
+      </button>
+    } @else {
+       <div class="flex gap-3 items-center">
+         
+         <!-- View Toggle -->
+         <div class="flex bg-white/5 rounded-lg p-1 mr-2 border border-white/5">
+            <button (click)="isPreviewMode.set(false)" [class.bg-white/10]="!isPreviewMode()" [class.text-white]="!isPreviewMode()" class="px-3 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1 text-gray-500 hover:text-gray-300">
+                <span class="material-symbols-outlined text-[16px]">edit</span> {{ store.dict().ed_edit_title }}
+            </button>
+            <button (click)="isPreviewMode.set(true)" [class.bg-white/10]="isPreviewMode()" [class.text-white]="isPreviewMode()" class="px-3 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1 text-gray-500 hover:text-gray-300">
+                <span class="material-symbols-outlined text-[16px]">visibility</span> {{ store.dict().bk_preview }}
+            </button>
+         </div>
+
+         <button (click)="cancelEdit()" class="px-3 py-1.5 text-gray-400 hover:bg-red-500/10 hover:text-red-400 rounded-lg text-sm font-medium border border-transparent transition flex items-center gap-1">
+           <span class="material-symbols-outlined text-[16px]">undo</span>
+           {{ store.dict().blg_discard }}
+         </button>
+         <button (click)="savePost()" class="px-5 py-2 bg-white text-black rounded-lg text-sm font-bold hover:bg-gray-200 shadow-sm flex items-center gap-2 transition">
+            <span class="material-symbols-outlined text-[18px]">publish</span>
+            {{ activePost.status === 'published' ? store.dict().blg_update : store.dict().blg_publish }}
+         </button>
+       </div>
+    }
+  </div>
+
+  <div class="flex-1 overflow-hidden">
+    
+    <!-- LIST VIEW -->
+    @if (!isEditing()) {
+      <div class="p-6 h-full overflow-y-auto">
+        <div class="bg-[#1C1D24] rounded-lg border border-white/10 shadow-sm overflow-hidden">
+           <table class="w-full text-left border-collapse">
+             <thead class="bg-white/5 border-b border-white/5">
+               <tr>
+                 <th class="py-3 px-6 text-[10px] font-bold text-gray-500 uppercase tracking-wider">{{ store.dict().blg_title_ph }}</th>
+                 <th class="py-3 px-6 text-[10px] font-bold text-gray-500 uppercase tracking-wider">{{ store.dict().blg_author }}</th>
+                 <th class="py-3 px-6 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Categories</th>
+                 <th class="py-3 px-6 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Date</th>
+                 <th class="py-3 px-6 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-right">Status</th>
+                 <th class="py-3 px-6 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+               </tr>
+             </thead>
+             <tbody class="divide-y divide-white/5">
+               @for (post of store.posts(); track post.id) {
+                 <tr class="hover:bg-white/5 transition cursor-pointer group">
+                   <td class="py-4 px-6" (click)="editPost(post)">
+                     <p class="font-bold text-gray-200 group-hover:text-purple-400 transition-colors">{{ post.title || '(Untitled)' }}</p>
+                     <p class="text-[10px] text-gray-600 font-mono mt-0.5">/{{ post.slug }}</p>
+                   </td>
+                   <td class="py-4 px-6 text-sm text-gray-400" (click)="editPost(post)">{{ post.authorName }}</td>
+                   <td class="py-4 px-6 text-sm text-gray-400" (click)="editPost(post)">
+                      {{ getCategoryNames(post) }}
+                   </td>
+                   <td class="py-4 px-6 text-sm text-gray-500" (click)="editPost(post)">{{ post.publishedAt | date:'mediumDate' }}</td>
+                   <td class="py-4 px-6 text-right" (click)="editPost(post)">
+                     <span [class]="post.status === 'published' ? 'text-green-400 bg-green-500/10 border-green-500/20' : 'text-amber-400 bg-amber-500/10 border-amber-500/20'" class="px-2.5 py-1 rounded border text-[10px] font-bold uppercase tracking-wide">
+                       {{ post.status }}
+                     </span>
+                   </td>
+                   <td class="py-4 px-6 text-right">
+                      <button (click)="deletePost($event, post.id)" class="text-gray-500 hover:text-red-400 p-2 rounded-full hover:bg-red-500/10 transition" title="Delete Post">
+                          <span class="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                   </td>
+                 </tr>
+               }
+             </tbody>
+           </table>
+           @if (store.posts().length === 0) {
+             <div class="p-12 text-center text-gray-600">
+                <span class="material-symbols-outlined text-4xl mb-2">article</span>
+                <p>No posts found. Start writing!</p>
+             </div>
+           }
+        </div>
+      </div>
+    } 
+    
+    <!-- EDITOR UI -->
+    @else {
+       <div class="h-full flex flex-col md:flex-row">
+          
+          <!-- Center: Writing / Preview Area -->
+          <div class="flex-1 h-full overflow-y-auto bg-[#0B0C10] p-4 md:p-8 flex justify-center scrollbar-thin scrollbar-thumb-white/10">
+             <div class="w-full max-w-3xl bg-[#161821] min-h-[90%] shadow-lg border border-white/5 rounded-sm p-8 md:p-12 relative flex flex-col">
+                
+                <!-- EDIT MODE -->
+                @if (!isPreviewMode()) {
+                    <!-- Title Input -->
+                    <div class="relative">
+                        <textarea 
+                            [(ngModel)]="activePost.title" 
+                            rows="1"
+                            (input)="autoResize($event); updateSlugIfNew()"
+                            class="w-full text-4xl font-bold text-white placeholder-gray-700 border-none outline-none resize-none bg-transparent overflow-hidden mb-4 leading-tight focus:ring-0 pr-12" 
+                            [placeholder]="store.dict().blg_title_ph"></textarea>
+                        
+                        <!-- Magic Button -->
+                        <button (click)="generateTitle()" [disabled]="isGenerating" class="absolute top-1 right-0 text-gray-600 hover:text-purple-400 transition-colors p-2" [title]="store.dict().blg_gen_title">
+                            <span class="material-symbols-outlined" [class.animate-spin]="isGenerating">auto_awesome</span>
+                        </button>
+                    </div>
+
+                    <!-- Permalink -->
+                    <div class="mb-6 flex items-center gap-1 text-xs text-gray-500 font-mono" *ngIf="activePost.slug">
+                       <span class="material-symbols-outlined text-[14px]">link</span>
+                       <span>{{ store.currentTenant()?.domain }}/blog/</span>
+                       <input [(ngModel)]="activePost.slug" (blur)="ensureUniqueSlug()" class="bg-transparent border-b border-dashed border-gray-700 focus:border-purple-500 outline-none text-gray-400 hover:text-purple-400 transition-colors">
+                    </div>
+
+                    <!-- Toolbar -->
+                    <div class="sticky top-0 z-10 bg-[#161821] border-b border-white/5 py-2 mb-4 flex items-center gap-1">
+                        <button (click)="insertFormatting('bold')" class="p-1.5 rounded hover:bg-white/5 text-gray-400 hover:text-white" title="Bold"><span class="material-symbols-outlined text-[18px]">format_bold</span></button>
+                        <button (click)="insertFormatting('italic')" class="p-1.5 rounded hover:bg-white/5 text-gray-400 hover:text-white" title="Italic"><span class="material-symbols-outlined text-[18px]">format_italic</span></button>
+                        <div class="w-px h-4 bg-white/10 mx-1"></div>
+                        <button (click)="insertFormatting('h2')" class="p-1.5 rounded hover:bg-white/5 text-gray-400 hover:text-white font-bold text-xs">H2</button>
+                        <button (click)="insertFormatting('h3')" class="p-1.5 rounded hover:bg-white/5 text-gray-400 hover:text-white font-bold text-xs">H3</button>
+                        <div class="w-px h-4 bg-white/10 mx-1"></div>
+                        <button (click)="insertFormatting('ul')" class="p-1.5 rounded hover:bg-white/5 text-gray-400 hover:text-white" title="List"><span class="material-symbols-outlined text-[18px]">format_list_bulleted</span></button>
+                        <button (click)="insertFormatting('quote')" class="p-1.5 rounded hover:bg-white/5 text-gray-400 hover:text-white" title="Quote"><span class="material-symbols-outlined text-[18px]">format_quote</span></button>
+                        <button (click)="insertFormatting('link')" class="p-1.5 rounded hover:bg-white/5 text-gray-400 hover:text-white" title="Link"><span class="material-symbols-outlined text-[18px]">link</span></button>
+                        
+                        <div class="flex-1"></div>
+                        
+                        <!-- GENERATE HTML BUTTON -->
+                        <button (click)="generateStyledHtml()" [disabled]="isGenerating" class="flex items-center gap-1 px-2 py-1 text-[10px] bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 rounded font-bold uppercase tracking-wider border border-purple-500/20 transition">
+                            <span class="material-symbols-outlined text-[14px]" [class.animate-spin]="isGenerating">html</span>
+                            {{ store.dict().blg_gen_html }}
+                        </button>
+                    </div>
+
+                    <!-- Content Area -->
+                    <textarea 
+                        #editorTextarea
+                        [(ngModel)]="activePost.body" 
+                        class="flex-1 w-full text-lg text-gray-300 placeholder-gray-700 border-none outline-none resize-none bg-transparent font-serif leading-relaxed focus:ring-0 min-h-[400px]" 
+                        [placeholder]="store.dict().blg_content_ph"></textarea>
+                 
+                    <!-- VerbAI Draft Button -->
+                    <div class="absolute bottom-8 right-8 z-10">
+                       <button (click)="generateFullPost()" [disabled]="isGenerating" class="flex items-center gap-2 bg-[#0B0C10] text-purple-400 hover:text-purple-300 hover:bg-[#1C1D24] border border-purple-500/30 px-4 py-2 rounded-full shadow-lg text-sm font-bold transition">
+                           <span class="material-symbols-outlined text-[18px]" [class.animate-spin]="isGenerating">smart_toy</span>
+                           {{ isGenerating ? 'Writing...' : store.dict().blg_write_ai }}
+                       </button>
+                    </div>
+                }
+
+                <!-- PREVIEW MODE -->
+                @else {
+                    <article class="prose prose-invert max-w-none">
+                        <h1 class="text-white">{{ activePost.title }}</h1>
+                        
+                        <!-- Featured Image Preview -->
+                        @if(activePost.featuredImage) {
+                            <img [src]="activePost.featuredImage" class="w-full h-auto rounded-xl shadow-sm mb-8 object-cover max-h-[400px] border border-white/5">
+                        }
+
+                        <div [innerHTML]="activePost.body" class="text-gray-300"></div>
+
+                        <!-- Tags Footer Preview -->
+                        <div class="mt-12 pt-8 border-t border-white/10 flex flex-wrap gap-2">
+                            @for(tagId of activePost.tagIds; track tagId) {
+                                <span class="bg-white/5 text-gray-400 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border border-white/5">
+                                    #{{ getTagName(tagId) }}
+                                </span>
+                            }
+                        </div>
+                    </article>
+                }
+
+             </div>
+          </div>
+
+          <!-- Sidebar: Settings & SEO -->
+          <div class="w-80 bg-[#161821] border-l border-white/5 h-full overflow-y-auto shrink-0 flex flex-col shadow-xl z-20">
+              
+              <!-- Box: Publish -->
+              <div class="border-b border-white/5">
+                  <div class="p-3 bg-[#1C1D24] border-b border-white/5 flex justify-between items-center">
+                      <h3 class="font-bold text-[10px] text-gray-500 uppercase tracking-widest">Publish</h3>
+                      <button (click)="toggleSidebarSection('publish')" class="text-gray-500 hover:text-white">
+                         <span class="material-symbols-outlined text-sm">{{ sidebarSections.publish ? 'expand_less' : 'expand_more' }}</span>
+                      </button>
+                  </div>
+                  
+                  @if (sidebarSections.publish) {
+                    <div class="p-4 space-y-4">
+                        <!-- Status -->
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-400 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-gray-600 text-lg">visibility</span>
+                                Status
+                            </span>
+                            <select [(ngModel)]="activePost.status" class="bg-black/30 text-white border border-white/10 rounded px-2 py-1 text-sm focus:border-purple-500 outline-none">
+                                <option value="draft">Draft</option>
+                                <option value="published">Published</option>
+                                <option value="scheduled">Scheduled</option>
+                            </select>
+                        </div>
+
+                        <!-- Date -->
+                        <div class="flex flex-col gap-1">
+                            <span class="text-sm font-medium text-gray-400 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-gray-600 text-lg">calendar_today</span>
+                                Date
+                            </span>
+                            <input type="datetime-local" 
+                                [ngModel]="activePost.publishedAt | date:'yyyy-MM-ddTHH:mm'" 
+                                (ngModelChange)="updateDate($event)"
+                                class="w-full bg-black/30 border border-white/10 rounded px-2 py-1.5 text-sm text-gray-300 focus:border-purple-500 outline-none">
+                        </div>
+
+                        <!-- Author -->
+                        <div class="flex flex-col gap-1">
+                            <span class="text-sm font-medium text-gray-400 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-gray-600 text-lg">person</span>
+                                Author
+                            </span>
+                            <select [(ngModel)]="activePost.authorName" class="w-full bg-black/30 border border-white/10 rounded px-2 py-1.5 text-sm text-gray-300 focus:border-purple-500 outline-none">
+                                <option [value]="store.currentUser()?.name">{{ store.currentUser()?.name }}</option>
+                                <option value="VerbAI Team">VerbAI Team</option>
+                                <option value="Guest Writer">Guest Writer</option>
+                            </select>
+                        </div>
+
+                        <!-- Delete Action -->
+                        <div class="pt-4 mt-2 border-t border-white/5 flex justify-between items-center">
+                            <button (click)="deletePost($event, activePost.id)" class="text-red-400 text-sm hover:underline flex items-center gap-1 hover:text-red-300">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                                Move to Trash
+                            </button>
+                        </div>
+                    </div>
+                  }
+              </div>
+
+              <!-- Box: Featured Image -->
+              <div class="border-b border-white/5">
+                   <div class="p-3 bg-[#1C1D24] border-b border-white/5 flex justify-between items-center">
+                      <h3 class="font-bold text-[10px] text-gray-500 uppercase tracking-widest">Featured Image</h3>
+                      <button (click)="toggleSidebarSection('image')" class="text-gray-500 hover:text-white">
+                         <span class="material-symbols-outlined text-sm">{{ sidebarSections.image ? 'expand_less' : 'expand_more' }}</span>
+                      </button>
+                  </div>
+                  
+                  @if (sidebarSections.image) {
+                    <div class="p-4">
+                         @if (activePost.featuredImage) {
+                             <div class="relative group rounded-lg overflow-hidden border border-white/10 mb-2">
+                                 <img [src]="activePost.featuredImage" class="w-full h-32 object-cover opacity-80 group-hover:opacity-100 transition">
+                                 <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                                     <button (click)="activePost.featuredImage = ''" class="text-white bg-red-500 p-1.5 rounded-full hover:bg-red-600">
+                                         <span class="material-symbols-outlined text-sm">delete</span>
+                                     </button>
+                                 </div>
+                             </div>
+                         }
+                         
+                         <div class="flex flex-col gap-2">
+                             <input [(ngModel)]="activePost.featuredImage" type="text" class="w-full border border-white/10 bg-black/30 text-gray-300 rounded px-2 py-1 text-xs focus:border-purple-500 outline-none placeholder-gray-600" placeholder="https://...">
+                             
+                             <button (click)="generateFeaturedImage()" [disabled]="isGenerating" class="w-full flex items-center justify-center gap-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 rounded py-1.5 text-xs font-bold transition disabled:opacity-50">
+                                 <span class="material-symbols-outlined text-sm" [class.animate-spin]="isGenerating">image</span>
+                                 Generate with Imagen 4.0
+                             </button>
+                         </div>
+                    </div>
+                  }
+              </div>
+
+              <!-- Box: Categories & Tags -->
+              <div class="border-b border-white/5">
+                  <div class="p-3 bg-[#1C1D24] border-b border-white/5 flex justify-between items-center">
+                      <h3 class="font-bold text-[10px] text-gray-500 uppercase tracking-widest">Taxonomy</h3>
+                      <button (click)="toggleSidebarSection('tags')" class="text-gray-500 hover:text-white">
+                         <span class="material-symbols-outlined text-sm">{{ sidebarSections.tags ? 'expand_less' : 'expand_more' }}</span>
+                      </button>
+                  </div>
+                  
+                  @if (sidebarSections.tags) {
+                    <div class="p-4 space-y-4">
+                        
+                        <!-- Categories -->
+                        <div>
+                            <span class="text-[10px] font-bold text-gray-500 uppercase mb-2 block">Category</span>
+                            <div class="space-y-1 max-h-32 overflow-y-auto mb-2 scrollbar-thin scrollbar-thumb-white/10">
+                                @for (cat of store.categories(); track cat.id) {
+                                    <label class="flex items-center gap-2 cursor-pointer group">
+                                        <input type="checkbox" 
+                                            [checked]="activePost.categoryIds.includes(cat.id)"
+                                            (change)="toggleCategory(cat.id)"
+                                            class="rounded border-gray-600 bg-black/30 text-purple-600 focus:ring-purple-500">
+                                        <span class="text-sm text-gray-400 group-hover:text-purple-400 transition">{{ cat.name }}</span>
+                                    </label>
+                                }
+                            </div>
+                            <div class="flex gap-1">
+                                <input #newCatInput type="text" placeholder="New..." class="flex-1 border border-white/10 bg-black/30 text-gray-300 rounded px-2 py-1 text-xs focus:border-purple-500 outline-none placeholder-gray-600">
+                                <button (click)="addNewCategory(newCatInput)" class="px-2 py-1 bg-white/5 border border-white/10 rounded text-xs font-bold hover:bg-white/10 text-gray-400">Add</button>
+                            </div>
+                        </div>
+
+                        <!-- Tags -->
+                        <div>
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-[10px] font-bold text-gray-500 uppercase">Tags</span>
+                                <button (click)="suggestAiTags()" class="text-[10px] text-purple-400 hover:text-purple-300 hover:underline flex items-center gap-0.5">
+                                    <span class="material-symbols-outlined text-[10px]">auto_awesome</span> Suggest
+                                </button>
+                            </div>
+
+                            <div class="flex flex-wrap gap-1.5 mb-3">
+                                @for (tagId of activePost.tagIds; track tagId) {
+                                    <span class="inline-flex items-center gap-1 bg-white/5 text-gray-400 px-2 py-0.5 rounded text-xs border border-white/10">
+                                        {{ getTagName(tagId) }}
+                                        <button (click)="removeTag(tagId)" class="hover:text-red-400 flex"><span class="material-symbols-outlined text-[10px]">close</span></button>
+                                    </span>
+                                }
+                            </div>
+
+                            <!-- AI Suggestions -->
+                            @if (suggestedTags().length > 0) {
+                                <div class="mb-3 p-2 bg-purple-500/10 rounded border border-purple-500/20">
+                                    <p class="text-[10px] text-purple-400 font-bold mb-1">AI Suggestions:</p>
+                                    <div class="flex flex-wrap gap-1">
+                                        @for (tag of suggestedTags(); track tag) {
+                                            <button (click)="addSuggestedTag(tag)" class="text-[10px] bg-[#161821] border border-purple-500/30 text-purple-300 px-1.5 py-0.5 rounded hover:bg-purple-500/20 transition">
+                                                + {{ tag }}
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Autocomplete Input -->
+                            <div class="relative">
+                                <input #tagInput 
+                                    (keyup.enter)="addTagFromInput(tagInput)"
+                                    (input)="handleTagInput($event)"
+                                    type="text" 
+                                    placeholder="Add tags..." 
+                                    class="w-full border border-white/10 bg-black/30 text-gray-300 rounded px-3 py-2 text-sm focus:border-purple-500 outline-none pr-8 placeholder-gray-600">
+                                <span class="absolute right-2 top-2 text-gray-600 text-xs">↵</span>
+                                
+                                <!-- Suggestions Dropdown -->
+                                @if (filteredTags().length > 0) {
+                                    <div class="absolute left-0 right-0 top-full mt-1 bg-[#1C1D24] border border-white/10 rounded shadow-lg z-50 overflow-hidden">
+                                        @for (tag of filteredTags(); track tag.id) {
+                                            <div (click)="selectTag(tag); tagInput.value=''" class="px-3 py-2 text-sm text-gray-400 hover:bg-white/5 hover:text-white cursor-pointer transition">
+                                                {{ tag.name }}
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+                  }
+              </div>
+
+              <!-- Box: SEO -->
+              <div class="flex-1 bg-[#161821]">
+                  <div class="p-3 bg-[#1C1D24] border-b border-white/5 flex justify-between items-center">
+                      <h3 class="font-bold text-[10px] text-gray-500 uppercase tracking-widest flex items-center gap-1">
+                           <span class="material-symbols-outlined text-[14px] text-blue-500">manage_search</span>
+                           {{ store.dict().blg_seo_intel }}
+                      </h3>
+                  </div>
+                  
+                  <div class="p-4 space-y-4">
+                      <div class="bg-blue-500/10 border border-blue-500/20 rounded p-3 mb-2">
+                          <div class="flex justify-between items-start">
+                              <p class="text-[10px] text-blue-300 leading-tight mb-2">VerbAI will auto-generate SEO tags when you write the post.</p>
+                              <button (click)="generateSeo()" [disabled]="isGenerating" class="text-[10px] bg-[#161821] border border-blue-500/30 text-blue-400 px-2 py-0.5 rounded hover:bg-blue-500/10 font-bold uppercase tracking-wide shrink-0 transition">
+                                  {{ store.dict().blg_optimize }}
+                              </button>
+                          </div>
+                      </div>
+
+                      <div>
+                          <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">{{ store.dict().blg_meta_title }}</label>
+                          <input [(ngModel)]="activePost.seoTitle" type="text" class="w-full text-xs p-2 border border-white/10 bg-black/30 text-gray-300 rounded focus:outline-none focus:border-blue-500" placeholder="Google Title">
+                          <div class="h-1 bg-white/10 mt-1 rounded overflow-hidden">
+                              <div class="h-full bg-green-500 transition-all duration-300" [style.width.%]="(activePost.seoTitle?.length || 0) / 60 * 100" [class.bg-red-500]="(activePost.seoTitle?.length || 0) > 60"></div>
+                          </div>
+                      </div>
+                      
+                      <div>
+                          <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">{{ store.dict().blg_meta_desc }}</label>
+                          <textarea [(ngModel)]="activePost.seoDescription" rows="3" class="w-full text-xs p-2 border border-white/10 bg-black/30 text-gray-300 rounded focus:outline-none focus:border-blue-500 resize-none" placeholder="Search result snippet"></textarea>
+                          <div class="h-1 bg-white/10 mt-1 rounded overflow-hidden">
+                              <div class="h-full bg-green-500 transition-all duration-300" [style.width.%]="(activePost.seoDescription?.length || 0) / 160 * 100" [class.bg-red-500]="(activePost.seoDescription?.length || 0) > 160"></div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+          </div>
+
+       </div>
+    }
+
+  </div>
+</div>

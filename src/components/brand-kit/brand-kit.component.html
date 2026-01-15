@@ -1,0 +1,193 @@
+<div class="p-8 max-w-5xl mx-auto w-full relative">
+  
+  <!-- Success Toast -->
+  @if (showSuccess()) {
+    <div class="fixed top-24 right-8 bg-green-500 text-white px-6 py-3 rounded-lg shadow-xl z-50 flex items-center gap-3 animate-[slideInRight_0.3s_ease-out]">
+      <span class="material-symbols-outlined">check_circle</span>
+      <span class="font-medium">Settings saved successfully!</span>
+    </div>
+  }
+
+  <header class="mb-8">
+    <h1 class="text-2xl font-bold text-white mb-1">{{ store.dict().bk_title }}</h1>
+    <p class="text-gray-500 text-sm">{{ store.dict().bk_desc }}</p>
+  </header>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Form Area -->
+    <div class="lg:col-span-2 space-y-6">
+      
+      <!-- Logos -->
+      <div class="bg-[#1C1D24] rounded-xl border border-white/10 shadow-sm p-6">
+        <h2 class="text-lg font-bold text-white mb-4">{{ store.dict().bk_logos }}</h2>
+        <div class="flex items-center gap-6">
+          
+          <!-- Logo Upload -->
+          <div (click)="logoInput.click()" class="relative group w-32 h-32 bg-black/30 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center text-gray-500 hover:bg-white/5 hover:border-purple-500 cursor-pointer transition overflow-hidden">
+            @if (store.brandKit().logoUrl) {
+              <img [src]="store.brandKit().logoUrl" class="w-full h-full object-contain p-2" alt="Logo">
+              
+              <!-- Remove Button -->
+              <button (click)="removeImage('logo', $event)" class="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition shadow-sm z-20 flex items-center justify-center opacity-0 group-hover:opacity-100" title="Remove Logo">
+                 <span class="material-symbols-outlined text-[16px]">delete</span>
+              </button>
+
+              <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition z-10 pointer-events-none">
+                <span class="material-symbols-outlined text-white">edit</span>
+              </div>
+            } @else {
+              <span class="material-symbols-outlined text-3xl mb-1">upload</span>
+              <span class="text-xs">{{ store.dict().bk_upload_logo }}</span>
+            }
+            <input #logoInput type="file" hidden accept="image/*" (change)="onFileSelected($event, 'logo')">
+          </div>
+
+          <!-- Favicon Upload -->
+          <div (click)="faviconInput.click()" class="relative group w-32 h-32 bg-black/30 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center text-gray-500 hover:bg-white/5 hover:border-purple-500 cursor-pointer transition overflow-hidden">
+             @if (store.brandKit().faviconUrl) {
+              <img [src]="store.brandKit().faviconUrl" class="w-16 h-16 object-contain" alt="Favicon">
+              
+              <!-- Remove Button -->
+              <button (click)="removeImage('favicon', $event)" class="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition shadow-sm z-20 flex items-center justify-center opacity-0 group-hover:opacity-100" title="Remove Favicon">
+                 <span class="material-symbols-outlined text-[16px]">delete</span>
+              </button>
+
+              <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition z-10 pointer-events-none">
+                <span class="material-symbols-outlined text-white">edit</span>
+              </div>
+            } @else {
+              <span class="material-symbols-outlined text-3xl mb-1">upload</span>
+              <span class="text-xs">{{ store.dict().bk_favicon }}</span>
+            }
+            <input #faviconInput type="file" hidden accept="image/*" (change)="onFileSelected($event, 'favicon')">
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Colors -->
+      <div class="bg-[#1C1D24] rounded-xl border border-white/10 shadow-sm p-6">
+        <h2 class="text-lg font-bold text-white mb-4">{{ store.dict().bk_colors }}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">{{ store.dict().bk_primary }}</label>
+            <div class="flex items-center gap-3">
+              <input type="color" [value]="store.brandKit().primaryColor" 
+                (input)="store.updateBrandKit({primaryColor: $any($event.target).value})"
+                class="h-10 w-10 p-0 border-0 rounded-lg cursor-pointer shadow-sm">
+              <input type="text" [value]="store.brandKit().primaryColor" class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-bold uppercase" readonly>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">{{ store.dict().bk_secondary }}</label>
+            <div class="flex items-center gap-3">
+              <input type="color" [value]="store.brandKit().secondaryColor" 
+                (input)="store.updateBrandKit({secondaryColor: $any($event.target).value})"
+                class="h-10 w-10 p-0 border-0 rounded-lg cursor-pointer shadow-sm">
+              <input type="text" [value]="store.brandKit().secondaryColor" class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-bold uppercase" readonly>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Typography -->
+      <div class="bg-[#1C1D24] rounded-xl border border-white/10 shadow-sm p-6">
+        <h2 class="text-lg font-bold text-white mb-4">{{ store.dict().bk_typography }}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">{{ store.dict().bk_font_heading }}</label>
+            <select [ngModel]="store.brandKit().fontHeadings" (ngModelChange)="store.updateBrandKit({fontHeadings: $event})"
+                    class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:ring-purple-500 focus:border-purple-500 outline-none">
+              @for (font of fonts; track font) {
+                <option [value]="font">{{ font }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">{{ store.dict().bk_font_body }}</label>
+            <select [ngModel]="store.brandKit().fontBody" (ngModelChange)="store.updateBrandKit({fontBody: $event})"
+                    class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:ring-purple-500 focus:border-purple-500 outline-none">
+              @for (font of fonts; track font) {
+                <option [value]="font">{{ font }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div>
+           <label class="block text-sm font-medium text-gray-400 mb-2">{{ store.dict().bk_tone }}</label>
+           <select [ngModel]="store.brandKit().toneOfVoice" (ngModelChange)="store.updateBrandKit({toneOfVoice: $event})"
+                   class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:ring-purple-500 focus:border-purple-500 outline-none">
+             @for (tone of tones; track tone) {
+               <option [value]="tone">{{ tone }}</option>
+             }
+           </select>
+           <p class="text-xs text-gray-500 mt-1">{{ store.dict().bk_tone_desc }}</p>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button (click)="saveSettings()" class="bg-white text-black px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-200 transition shadow-md flex items-center gap-2">
+          {{ store.dict().bk_save }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Preview -->
+    <div class="lg:col-span-1">
+      <div class="sticky top-8">
+        <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">{{ store.dict().bk_preview }}</h3>
+        
+        <div class="bg-white rounded-xl overflow-hidden shadow-2xl border border-white/10 transform scale-100 origin-top-left">
+          <!-- Mock Browser Header -->
+          <div class="bg-gray-100 border-b border-gray-200 px-3 py-2 flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-green-400"></div>
+            </div>
+            <!-- Show Favicon in Tab if available -->
+            @if (store.brandKit().faviconUrl) {
+               <div class="w-4 h-4 rounded-sm overflow-hidden">
+                 <img [src]="store.brandKit().faviconUrl" class="w-full h-full object-cover">
+               </div>
+            }
+          </div>
+          
+          <!-- Content Preview -->
+          <div class="p-6 text-center flex flex-col items-center" [style.font-family]="store.brandKit().fontBody">
+             
+             <!-- Show Logo in Header if available -->
+             @if (store.brandKit().logoUrl) {
+                <img [src]="store.brandKit().logoUrl" class="h-12 object-contain mb-6">
+             } @else {
+                <div class="mb-4 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                  {{ store.dict().bk_preview_feature }}
+               </div>
+             }
+
+             <h2 class="text-2xl font-bold mb-3" 
+                 [style.color]="'#111827'" 
+                 [style.font-family]="store.brandKit().fontHeadings">
+               {{ store.dict().bk_preview_headline }}
+             </h2>
+             <p class="text-gray-600 text-sm mb-6 leading-relaxed">
+               {{ store.dict().bk_preview_text }}
+             </p>
+             
+             <div class="flex flex-col gap-3 w-full">
+               <button class="w-full px-4 py-2.5 rounded-lg text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+                       [style.background-color]="store.brandKit().primaryColor">
+                 Primary Action
+               </button>
+               <button class="w-full px-4 py-2.5 rounded-lg text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+                       [style.background-color]="store.brandKit().secondaryColor">
+                 Secondary Action
+               </button>
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

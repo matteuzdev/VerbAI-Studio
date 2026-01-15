@@ -1,0 +1,479 @@
+<div class="h-full flex flex-col bg-[#0B0C10]">
+  <!-- Topbar -->
+  <div class="h-16 bg-[#161821] border-b border-white/5 px-6 flex items-center justify-between shrink-0 z-20">
+    <div class="flex items-center gap-3">
+       <button routerLink="/admin/dashboard" class="p-2 rounded-lg text-gray-500 hover:bg-white/5 hover:text-white transition">
+        <span class="material-symbols-outlined">arrow_back</span>
+       </button>
+       <div>
+         <h1 class="font-bold text-white text-lg leading-tight">{{ store.dict().pageEditor }}</h1>
+         <span class="text-[10px] font-bold bg-green-500/10 text-green-400 px-2 py-0.5 rounded border border-green-500/20 uppercase tracking-wide">{{ store.dict().ed_published }}</span>
+       </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="text-[10px] text-gray-600 mr-2 font-mono uppercase">{{ store.dict().ed_last_saved }}</div>
+      
+      <!-- SEO Button -->
+      <button (click)="openPageSeo()" class="px-3 py-2 border border-blue-500/30 text-blue-400 bg-blue-500/10 rounded-lg text-xs font-bold hover:bg-blue-500/20 flex items-center gap-2 transition-colors">
+         <span class="material-symbols-outlined text-[16px]">manage_search</span>
+         {{ store.dict().ed_seo_settings }}
+      </button>
+
+      <button (click)="viewSite()" class="px-3 py-2 border border-white/10 rounded-lg text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition-colors">
+        <span class="material-symbols-outlined text-[16px]">visibility</span>
+        {{ store.dict().ed_view_site }}
+      </button>
+      <button class="px-4 py-2 bg-white text-black rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+        {{ store.dict().ed_publish_btn }}
+      </button>
+    </div>
+  </div>
+
+  <div class="flex-1 overflow-hidden flex relative">
+    
+    <!-- Canvas Area (Center) -->
+    <div class="flex-1 overflow-y-auto relative bg-[#0B0C10]">
+        <!-- Pass editor mode true -->
+        <app-public-landing 
+            [isEditorMode]="true" 
+            (onEditSection)="editSection($event)">
+        </app-public-landing>
+    </div>
+
+    <!-- Properties Sidebar (Right) - Slide Over -->
+    @if (sidebarOpen()) {
+      <div class="w-96 bg-[#161821] border-l border-white/5 shadow-2xl flex flex-col z-30 absolute right-0 h-full animate-[slideInRight_0.2s_ease-out]">
+        
+        <!-- Header -->
+        <div class="p-4 border-b border-white/5 flex items-center justify-between bg-[#1C1D24]">
+          <h2 class="font-bold text-[10px] text-gray-500 uppercase tracking-widest">
+            @if(activeSectionId() === 'PAGE_SEO') {
+                {{ store.dict().ed_seo_settings | uppercase }}
+            } @else if(activeSectionId() === 'global_header') {
+                GLOBAL HEADER
+            } @else if(activeSectionId() === 'global_footer') {
+                GLOBAL FOOTER
+            } @else {
+                {{ store.dict().ed_edit_title }} {{ activeSection?.type | uppercase }}
+            }
+          </h2>
+          <button (click)="closeSidebar()" class="text-gray-500 hover:text-white transition-colors">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-8">
+          
+          <!-- GLOBAL HEADER EDIT -->
+          @if(activeSectionId() === 'global_header') {
+             <div class="space-y-6">
+                 <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 tracking-wide">Logo Text</label>
+                    <input type="text" [(ngModel)]="store.siteConfig().header.logoText" (change)="updateGlobalConfig()"
+                      class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg p-3 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors">
+                 </div>
+                 
+                 <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Nav Links</label>
+                        <button (click)="addHeaderLink()" class="text-[10px] text-purple-400 font-bold hover:text-purple-300 hover:underline">+ Add Link</button>
+                    </div>
+                    <div class="space-y-2">
+                        @for(link of store.siteConfig().header.links; track $index) {
+                            <div class="flex gap-2 items-center bg-white/5 p-2 rounded border border-white/5">
+                                <input type="text" [(ngModel)]="link.label" (change)="updateGlobalConfig()" class="w-1/3 bg-transparent border-b border-white/10 text-white text-xs p-1 focus:border-purple-500 outline-none" placeholder="Label">
+                                <input type="text" [(ngModel)]="link.url" (change)="updateGlobalConfig()" class="flex-1 bg-transparent border-b border-white/10 text-gray-400 text-xs p-1 focus:border-purple-500 outline-none" placeholder="URL">
+                                <button (click)="removeHeaderLink($index)" class="text-gray-600 hover:text-red-400"><span class="material-symbols-outlined text-sm">delete</span></button>
+                            </div>
+                        }
+                    </div>
+                 </div>
+             </div>
+          }
+
+          <!-- GLOBAL FOOTER EDIT -->
+          @if(activeSectionId() === 'global_footer') {
+             <div class="space-y-6">
+                 <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 tracking-wide">Copyright Text</label>
+                    <input type="text" [(ngModel)]="store.siteConfig().footer.copyright" (change)="updateGlobalConfig()"
+                      class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg p-3 outline-none focus:border-purple-500 transition-colors">
+                 </div>
+                 
+                 <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Footer Links</label>
+                        <button (click)="addFooterLink()" class="text-[10px] text-purple-400 font-bold hover:text-purple-300 hover:underline">+ Add Link</button>
+                    </div>
+                    <div class="space-y-2">
+                        @for(link of store.siteConfig().footer.links; track $index) {
+                            <div class="flex gap-2 items-center bg-white/5 p-2 rounded border border-white/5">
+                                <input type="text" [(ngModel)]="link.label" (change)="updateGlobalConfig()" class="w-1/3 bg-transparent border-b border-white/10 text-white text-xs p-1 focus:border-purple-500 outline-none" placeholder="Label">
+                                <input type="text" [(ngModel)]="link.url" (change)="updateGlobalConfig()" class="flex-1 bg-transparent border-b border-white/10 text-gray-400 text-xs p-1 focus:border-purple-500 outline-none" placeholder="URL">
+                                <button (click)="removeFooterLink($index)" class="text-gray-600 hover:text-red-400"><span class="material-symbols-outlined text-sm">delete</span></button>
+                            </div>
+                        }
+                    </div>
+                 </div>
+             </div>
+          }
+
+          <!-- PAGE SEO MODE -->
+          @if(activeSectionId() === 'PAGE_SEO') {
+             <div class="space-y-6">
+                
+                <!-- Audit Action -->
+                @if(!seoAnalysis()) {
+                    <div class="bg-blue-900/10 border border-blue-500/20 rounded-xl p-5 text-center">
+                        <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3 text-blue-400">
+                            <span class="material-symbols-outlined">analytics</span>
+                        </div>
+                        <h3 class="font-bold text-white text-sm mb-1">SEO Audit</h3>
+                        <p class="text-xs text-blue-200/70 mb-4">
+                            Run VerbAI to analyze ranking potential against current Google algorithms.
+                        </p>
+                        <button (click)="runSeoAudit()" [disabled]="isGenerating()" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg text-xs shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:bg-blue-500 disabled:opacity-50 transition flex items-center justify-center gap-2">
+                            @if(isGenerating()) {
+                                <span class="animate-spin material-symbols-outlined text-sm">sync</span> Analyzing...
+                            } @else {
+                                Start Analysis
+                            }
+                        </button>
+                    </div>
+                }
+
+                <!-- Scorecard -->
+                @if(seoAnalysis(); as analysis) {
+                    <div class="relative bg-[#1C1D24] rounded-xl border border-white/10 overflow-hidden shadow-sm">
+                        <!-- Score Header -->
+                        <div class="p-6 flex flex-col items-center justify-center border-b border-white/5 bg-white/5">
+                            <div class="relative w-24 h-24 flex items-center justify-center">
+                                <svg class="transform -rotate-90 w-24 h-24">
+                                    <circle cx="48" cy="48" r="40" stroke="rgba(255,255,255,0.1)" stroke-width="8" fill="transparent" />
+                                    <circle cx="48" cy="48" r="40" 
+                                        [attr.stroke]="analysis.score > 80 ? '#22c55e' : (analysis.score > 50 ? '#eab308' : '#ef4444')" 
+                                        stroke-width="8" fill="transparent" 
+                                        [attr.stroke-dasharray]="251.2" 
+                                        [attr.stroke-dashoffset]="251.2 - (251.2 * analysis.score) / 100" 
+                                        class="transition-all duration-1000 ease-out" 
+                                        stroke-linecap="round"/>
+                                </svg>
+                                <span class="absolute text-3xl font-bold text-white">{{ analysis.score }}</span>
+                            </div>
+                            <div class="mt-2 text-sm font-bold uppercase tracking-wide" 
+                                [class.text-green-400]="analysis.score > 80"
+                                [class.text-yellow-400]="analysis.score > 50 && analysis.score <= 80"
+                                [class.text-red-400]="analysis.score <= 50">
+                                {{ analysis.verdict }}
+                            </div>
+                        </div>
+
+                        <!-- Proof / Insight -->
+                        <div class="p-4 bg-purple-900/10 border-b border-purple-500/20">
+                            <div class="flex gap-2 items-start">
+                                <span class="material-symbols-outlined text-purple-400 text-lg mt-0.5">verified</span>
+                                <div>
+                                    <h4 class="text-[10px] font-bold text-purple-300 uppercase mb-1">Algorithm Proof</h4>
+                                    <p class="text-xs text-purple-200/80 leading-relaxed italic">"{{ analysis.proof }}"</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Details -->
+                        <div class="p-4 space-y-4">
+                            <!-- Pros -->
+                            <div>
+                                <h4 class="text-[10px] font-bold text-gray-500 uppercase mb-2">Ranking Signals (Good)</h4>
+                                <ul class="space-y-1">
+                                    @for(pos of analysis.positive; track $index) {
+                                        <li class="flex items-start gap-2 text-xs text-gray-400">
+                                            <span class="material-symbols-outlined text-green-500 text-sm">check</span>
+                                            {{ pos }}
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                            
+                            <!-- Cons -->
+                            <div>
+                                <h4 class="text-[10px] font-bold text-gray-500 uppercase mb-2">Penalties / Issues</h4>
+                                <ul class="space-y-1">
+                                    @for(neg of analysis.negative; track $index) {
+                                        <li class="flex items-start gap-2 text-xs text-gray-400">
+                                            <span class="material-symbols-outlined text-red-500 text-sm">warning</span>
+                                            {{ neg }}
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-white/5 border-t border-white/5">
+                            <button (click)="autoFixSeo()" class="w-full flex items-center justify-center gap-2 bg-white text-black py-2 rounded text-xs font-bold hover:bg-gray-200 transition">
+                                <span class="material-symbols-outlined text-sm">auto_fix_high</span>
+                                Auto-Fix with AI
+                            </button>
+                        </div>
+                    </div>
+                }
+
+                <div class="border-t border-white/5 my-4 pt-4"></div>
+
+                <!-- Inputs Manual -->
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 tracking-wide">Page Title</label>
+                    <input type="text" 
+                        [ngModel]="store.pageSeo().title" 
+                        (ngModelChange)="store.updatePageSeo({title: $event})" 
+                        class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 block p-3 transition-all outline-none"
+                        placeholder="Ex: My Amazing Landing Page">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 tracking-wide">Meta Description</label>
+                    <textarea rows="4" 
+                        [ngModel]="store.pageSeo().description" 
+                        (ngModelChange)="store.updatePageSeo({description: $event})" 
+                        class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 block p-3 transition-all outline-none resize-none"
+                        placeholder="A short summary of your page..."></textarea>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 tracking-wide">Keywords</label>
+                    <input type="text" 
+                        [ngModel]="store.pageSeo().keywords" 
+                        (ngModelChange)="store.updatePageSeo({keywords: $event})" 
+                        class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 block p-3 transition-all outline-none"
+                        placeholder="keyword1, keyword2, ...">
+                </div>
+             </div>
+          }
+
+          <!-- SECTION EDIT MODE -->
+          @if (activeSection) {
+            
+            <div class="flex items-center justify-between mb-6 p-3 bg-white/5 rounded-lg border border-white/5">
+               <span class="text-xs font-bold text-gray-400 uppercase tracking-wide">Section Visibility</span>
+               <button (click)="toggleSection(activeSection.id)" 
+                  [class.bg-green-500]="activeSection.isEnabled"
+                  [class.bg-gray-600]="!activeSection.isEnabled"
+                  class="relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none cursor-pointer">
+                  <span 
+                    [class.translate-x-5]="activeSection.isEnabled"
+                    [class.translate-x-1]="!activeSection.isEnabled"
+                    class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm"></span>
+               </button>
+            </div>
+
+            <!-- Hero Fields -->
+            @if (activeSection.type === 'hero') {
+              <div class="space-y-6">
+                <div>
+                  <div class="flex justify-between items-center mb-1.5">
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Headline Line 1</label>
+                  </div>
+                  <input type="text" [(ngModel)]="activeSection.content.headline_1" 
+                    class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 block p-3 transition-all outline-none">
+                </div>
+                
+                <div>
+                   <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 tracking-wide">Headline Line 2 (Gradient)</label>
+                   <input type="text" [(ngModel)]="activeSection.content.headline_2" 
+                     class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 block p-3 transition-all outline-none">
+                </div>
+
+                <div>
+                   <div class="flex justify-between items-center mb-1.5">
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Description</label>
+                    <button 
+                      (click)="generateContent('desc', 'Description of services: Websites, Automation, AI Agents')"
+                      [disabled]="isGenerating()"
+                      class="text-[10px] flex items-center gap-1.5 text-purple-400 hover:text-purple-300 font-bold disabled:opacity-50 bg-purple-500/10 hover:bg-purple-500/20 px-2 py-0.5 rounded border border-purple-500/20 transition-colors">
+                       <span class="material-symbols-outlined text-[12px]" [class.animate-spin]="generatingField() === 'desc'">auto_awesome</span>
+                       Gen with VerbAI
+                    </button>
+                  </div>
+                  <textarea 
+                    [(ngModel)]="activeSection.content.desc" 
+                    rows="4"
+                    class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 block p-3 transition-all outline-none resize-none"></textarea>
+                </div>
+
+                <div>
+                  <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 tracking-wide">CTA Label</label>
+                  <input type="text" [(ngModel)]="activeSection.content.ctaText" 
+                    class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 block p-3 transition-all outline-none">
+                </div>
+
+                <!-- Image Gen Button -->
+                <div class="pt-4 border-t border-white/10">
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-2 tracking-wide">Hero Background Image</label>
+                        
+                    @if (activeSection.content.image) {
+                        <div class="relative w-full h-32 bg-black/50 rounded-lg overflow-hidden border border-white/10 mb-3 group">
+                            <img [src]="activeSection.content.image" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition duration-500">
+                            <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                                <button (click)="activeSection.content.image = ''" class="text-white hover:text-red-400">
+                                    <span class="material-symbols-outlined">delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    }
+
+                    <button 
+                        (click)="generateImage('image', activeSection.id)"
+                        [disabled]="isGenerating()"
+                        class="w-full text-xs flex items-center justify-center gap-2 text-white font-medium disabled:opacity-50 bg-[#25262B] hover:bg-[#2C2E33] px-3 py-3 rounded border border-white/10 shadow-sm transition-all hover:shadow-md backdrop-blur-sm">
+                        @if(generatingField() === 'image') {
+                            <span class="material-symbols-outlined text-[16px] animate-spin">sync</span> Processando...
+                        } @else {
+                            <span class="material-symbols-outlined text-[16px]">image_search</span> Substituir imagem com VerbAI Images
+                        }
+                    </button>
+                    <p class="text-[10px] text-gray-500 mt-2">Gera uma nova imagem 16:9 baseada no contexto da seção.</p>
+                </div>
+              </div>
+            }
+
+            <!-- Deep Dive Fields -->
+            @if (activeSection.type === 'deep-dive') {
+                 <div class="space-y-6">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 tracking-wide">Title</label>
+                        <input type="text" [(ngModel)]="activeSection.content.title" 
+                          class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 block p-3 transition-all outline-none">
+                    </div>
+                     <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 tracking-wide">Highlight Word</label>
+                        <input type="text" [(ngModel)]="activeSection.content.highlight" 
+                          class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 block p-3 transition-all outline-none">
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Description</label>
+                            <button 
+                            (click)="generateContent('desc', 'Explain benefit of ' + activeSection.content.title)"
+                            [disabled]="isGenerating()"
+                            class="text-[10px] flex items-center gap-1.5 text-purple-400 hover:text-purple-300 font-bold disabled:opacity-50 bg-purple-500/10 hover:bg-purple-500/20 px-2 py-0.5 rounded border border-purple-500/20 transition-colors">
+                            <span class="material-symbols-outlined text-[12px]" [class.animate-spin]="generatingField() === 'desc'">auto_awesome</span>
+                            Gen with VerbAI
+                            </button>
+                        </div>
+                        <textarea [(ngModel)]="activeSection.content.desc" rows="4" 
+                          class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 block p-3 transition-all outline-none resize-none"></textarea>
+                    </div>
+
+                    <!-- Image Generation for Deep Dive -->
+                    <div class="pt-4 border-t border-white/10">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-2 tracking-wide">Visual Representation</label>
+                            
+                        @if (activeSection.content.image) {
+                            <div class="relative w-full h-32 bg-black/50 rounded-lg overflow-hidden border border-white/10 mb-3 group">
+                                <img [src]="activeSection.content.image" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition duration-500">
+                                <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                                    <button (click)="activeSection.content.image = ''" class="text-white hover:text-red-400">
+                                        <span class="material-symbols-outlined">delete</span>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+
+                        <button 
+                            (click)="generateImage('image', activeSection.id)"
+                            [disabled]="isGenerating()"
+                             class="w-full text-xs flex items-center justify-center gap-2 text-white font-medium disabled:opacity-50 bg-[#25262B] hover:bg-[#2C2E33] px-3 py-3 rounded border border-white/10 shadow-sm transition-all hover:shadow-md backdrop-blur-sm">
+                            @if(generatingField() === 'image') {
+                                <span class="material-symbols-outlined text-[16px] animate-spin">sync</span> Processando...
+                            } @else {
+                                <span class="material-symbols-outlined text-[16px]">image_search</span> Substituir imagem com VerbAI Images
+                            }
+                        </button>
+                        <p class="text-[10px] text-gray-500 mt-2">Replaces the visual placeholder.</p>
+                    </div>
+                 </div>
+            }
+
+            <!-- Features Fields -->
+            @if (activeSection.type === 'features') {
+               <div class="space-y-6">
+                 <div class="space-y-4">
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Ecosystem Items</label>
+                    @for (item of activeSection.content.items; track $index) {
+                      <div class="p-4 bg-white/5 rounded-xl border border-white/5 group hover:border-purple-500/30 transition-colors">
+                        <input type="text" [(ngModel)]="item.title" 
+                          class="w-full border-b border-white/10 bg-transparent mb-2 pb-1 text-sm font-bold text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-600" placeholder="Item Title">
+                        <textarea [(ngModel)]="item.desc" rows="2" 
+                          class="w-full bg-transparent text-xs text-gray-400 focus:outline-none resize-none placeholder-gray-600 leading-relaxed border border-transparent focus:border-white/10 rounded p-1" placeholder="Item description goes here..."></textarea>
+                      </div>
+                    }
+                 </div>
+               </div>
+            }
+
+            <!-- CTA Fields -->
+            @if (activeSection.type === 'cta') {
+               <div class="space-y-6">
+                <div>
+                  <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 tracking-wide">Headline</label>
+                  <input type="text" [(ngModel)]="activeSection.content.title" 
+                    class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 block p-3 transition-all outline-none">
+                </div>
+                <div>
+                   <div class="flex justify-between items-center mb-1.5">
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Subtext</label>
+                     <button 
+                      (click)="generateContent('text', 'Persuasive final call to action')"
+                      [disabled]="isGenerating()"
+                      class="text-[10px] flex items-center gap-1.5 text-purple-400 hover:text-purple-300 font-bold disabled:opacity-50 bg-purple-500/10 hover:bg-purple-500/20 px-2 py-0.5 rounded border border-purple-500/20 transition-colors">
+                       <span class="material-symbols-outlined text-[12px]" [class.animate-spin]="generatingField() === 'text'">auto_awesome</span>
+                       Gen with VerbAI
+                    </button>
+                  </div>
+                  <textarea 
+                    [(ngModel)]="activeSection.content.text" 
+                    rows="3"
+                    class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 block p-3 transition-all outline-none resize-none"></textarea>
+                </div>
+                 <div>
+                  <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 tracking-wide">Button Label</label>
+                  <input type="text" [(ngModel)]="activeSection.content.buttonLabel" 
+                    class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 block p-3 transition-all outline-none">
+                </div>
+               </div>
+            }
+
+          }
+        </div>
+        
+        <!-- Footer / Upsell -->
+        <div class="p-4 border-t border-white/5 bg-[#1C1D24]">
+          <!-- Super Admin God Mode Check -->
+          @if (store.currentUser()?.role === 'super_admin') {
+            <div class="bg-gradient-to-r from-purple-900 to-blue-900 border border-purple-500/50 rounded p-3 shadow-md text-white animate-[pulse-glow_3s_infinite]">
+               <div class="flex gap-2 items-center">
+                 <span class="material-symbols-outlined text-yellow-300 text-lg">bolt</span>
+                 <div class="text-xs">
+                   <p class="font-bold text-white mb-0.5">Owner Access</p>
+                   <p class="opacity-90">VerbAI Add-on Active (Unlimited)</p>
+                 </div>
+               </div>
+            </div>
+          } @else {
+            <div class="bg-white/5 border border-white/10 rounded-lg p-3 shadow-sm hover:bg-white/10 transition cursor-pointer">
+               <div class="flex gap-3">
+                 <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
+                    <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                 </div>
+                 <div class="text-xs text-gray-400">
+                   <p class="font-bold text-gray-200 mb-0.5">{{ store.dict().ed_verbai_upsell }}</p>
+                   <p class="leading-tight">{{ store.dict().ed_verbai_upgrade }}</p>
+                 </div>
+               </div>
+            </div>
+          }
+        </div>
+
+      </div>
+    }
+
+  </div>
+</div>

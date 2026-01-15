@@ -1,0 +1,135 @@
+<div class="p-8 max-w-4xl mx-auto w-full relative">
+  
+  @if (showSuccess()) {
+    <div class="fixed top-24 right-8 bg-green-500 text-white px-6 py-3 rounded-lg shadow-xl z-50 flex items-center gap-3 animate-[slideInRight_0.3s_ease-out]">
+      <span class="material-symbols-outlined">check_circle</span>
+      <span class="font-medium">System configurations updated!</span>
+    </div>
+  }
+
+  <header class="mb-8">
+    <h1 class="text-2xl font-bold text-white mb-1">{{ store.dict().settings }}</h1>
+    <p class="text-gray-500 text-sm">Manage external connections and system parameters.</p>
+  </header>
+
+  <div class="space-y-8">
+    
+    <!-- AI Providers Section -->
+    <div class="bg-[#1C1D24] rounded-xl border border-white/10 shadow-sm overflow-hidden">
+      <div class="p-6 border-b border-white/5 bg-[#161821] flex justify-between items-center">
+        <div>
+           <h2 class="text-lg font-bold text-white flex items-center gap-2">
+             <span class="material-symbols-outlined text-purple-400">psychology</span>
+             {{ store.dict().set_providers }}
+           </h2>
+           <p class="text-xs text-gray-500 mt-1">Configure the intelligence engines driving VerbAI.</p>
+        </div>
+        <span class="px-3 py-1 bg-green-500/10 text-green-400 rounded-full text-[10px] font-bold border border-green-500/20 uppercase tracking-wide">{{ store.dict().set_active }}</span>
+      </div>
+      
+      <div class="p-6 space-y-6">
+        
+        <!-- Google Gemini (Primary) -->
+        <div>
+           <label class="block text-sm font-bold text-gray-300 mb-2 flex items-center gap-2">
+             <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg" class="w-4 h-4">
+             {{ store.dict().set_gemini_label }} <span class="text-xs font-normal text-gray-500">({{ store.dict().set_gemini_desc }})</span>
+           </label>
+           <div class="relative">
+             <input type="password" [ngModel]="googleKey()" (ngModelChange)="googleKey.set($event)" 
+               class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block p-3 pr-10 font-mono transition-all outline-none" 
+               placeholder="AIzaSy...">
+             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+               <span class="material-symbols-outlined text-green-500 text-sm" *ngIf="googleKey()">check_circle</span>
+             </div>
+           </div>
+           <p class="mt-2 text-xs text-gray-500">
+             Used for Content Generation, SEO Analysis, and the Public Chatbot. 
+             <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-purple-400 hover:underline">Get a key here</a>.
+           </p>
+        </div>
+
+        <div class="h-px bg-white/5 w-full"></div>
+
+        <!-- OpenAI (Optional) -->
+        <div class="opacity-60 grayscale transition-all hover:grayscale-0 hover:opacity-100">
+           <label class="block text-sm font-bold text-gray-300 mb-2 flex items-center gap-2">
+             {{ store.dict().set_openai_label }} <span class="text-xs font-normal text-gray-500">(Optional / Future)</span>
+           </label>
+           <input type="password" [ngModel]="openaiKey()" (ngModelChange)="openaiKey.set($event)"
+             class="w-full bg-black/30 border border-white/10 text-white text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block p-3 font-mono transition-all outline-none" 
+             placeholder="sk-...">
+        </div>
+
+      </div>
+      <div class="bg-[#161821] px-6 py-4 border-t border-white/5 flex justify-end">
+        <button (click)="saveKeys()" class="bg-purple-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-purple-500 transition shadow-md flex items-center gap-2">
+          {{ store.dict().set_save }}
+        </button>
+      </div>
+    </div>
+
+    <!-- SEO & Robots Section -->
+    <div class="bg-[#1C1D24] rounded-xl border border-white/10 shadow-sm overflow-hidden">
+       <div class="p-6 border-b border-white/5 bg-[#161821] flex justify-between items-center">
+         <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <span class="material-symbols-outlined text-blue-400">manage_search</span>
+              Technical SEO
+            </h2>
+            <p class="text-xs text-gray-500 mt-1">Configure automated SEO protocols.</p>
+         </div>
+       </div>
+
+       <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+           
+           <!-- Robots.txt -->
+           <div>
+               <label class="block text-sm font-bold text-gray-300 mb-2">robots.txt</label>
+               <textarea [(ngModel)]="store.siteConfig().robotsTxt" rows="6" 
+                 class="w-full bg-black/30 text-green-400 font-mono text-xs p-3 rounded-lg border border-white/10 focus:outline-none focus:border-green-500/50"></textarea>
+               <div class="mt-2 flex justify-end">
+                  <button (click)="saveRobots()" class="text-xs text-blue-400 font-bold hover:underline">Save File</button>
+               </div>
+           </div>
+
+           <!-- Sitemap -->
+           <div>
+               <label class="block text-sm font-bold text-gray-300 mb-2 flex justify-between">
+                   XML Sitemap
+                   <span class="text-[10px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded-full border border-green-500/20">Auto-Generated</span>
+               </label>
+               <div class="w-full bg-black/30 text-gray-500 font-mono text-[10px] p-3 rounded-lg border border-white/10 h-32 overflow-y-auto whitespace-pre-wrap select-all scrollbar-thin scrollbar-thumb-white/10">
+                   {{ sitemapPreview() }}
+               </div>
+               <div class="mt-2 flex justify-end">
+                  <button (click)="downloadSitemap()" class="flex items-center gap-1 text-xs text-blue-400 font-bold hover:underline">
+                      <span class="material-symbols-outlined text-sm">download</span> Download XML
+                  </button>
+               </div>
+           </div>
+
+       </div>
+    </div>
+
+    <!-- Export System Section -->
+    <div class="bg-[#1C1D24] rounded-xl border border-white/10 shadow-sm p-6 opacity-75">
+       <div class="flex items-center gap-4 mb-4">
+         <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-400">
+           <span class="material-symbols-outlined">output</span>
+         </div>
+         <div>
+           <h2 class="text-lg font-bold text-white">{{ store.dict().set_export }}</h2>
+           <p class="text-sm text-gray-500">Download the full Angular/Next.js codebase for this tenant.</p>
+         </div>
+       </div>
+       <div class="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 text-sm text-yellow-400 mb-4">
+         <span class="font-bold">Note:</span> Your custom API Keys stored above will be included in the local environment configuration (.env.local) of the exported project.
+       </div>
+       <button class="text-gray-500 font-bold text-sm cursor-not-allowed border border-white/10 px-4 py-2 rounded-lg bg-white/5">
+         Export Feature (Coming Soon)
+       </button>
+    </div>
+
+  </div>
+</div>

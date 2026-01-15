@@ -1,0 +1,5 @@
+{
+  "name": "VerbAI Studio",
+  "description": "A multi-tenant headless CMS and backoffice for managing content-driven websites with AI-powered copy generation.",
+  "requestFramePermissions": []
+}
